@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Run Claude Code against local nelkinda models via litellm proxy.
+# Usage: claude-nelkinda [model-alias] [claude-code args...]
+#   model-alias: gemma-12b | gemma-26b | gemma-31b | qwen-27b | qwen-27b-fp8 | qwen-35b
+#   default: qwen-27b
+
+set -euo pipefail
+
+PROXY_PORT=4000
+PROXY_URL="http://localhost:${PROXY_PORT}"
+MASTER_KEY_FILE="$HOME/.config/litellm/master_key.txt"
+CONFIG_FILE="$HOME/.config/litellm/config.yaml"
+LOG_FILE="$HOME/.config/litellm/proxy.log"
+
+declare -A MODELS=(
+  [gemma-12b]="nelkinda-gemma4-12b"
+  [gemma-26b]="nelkinda-gemma4-26b"
+  [gemma-31b]="nelkinda-gemma4-31b"
+  [qwen-27b]="nelkinda-qwen-27b"
+  [qwen-27b-fp8]="nelkinda-qwen-27b-fp8"
+  [qwen-35b]="nelkinda-qwen-35b"
+)
+
+ALIAS="qwen-27b"
+if [[ $# -gt 0 && -n "${MODELS[$1]:-}" ]]; then
+  ALIAS="$1"
+  shift
+fi
+MODEL_NAME="${MODELS[$ALIAS]}"
+
+if ! curl -s -m 2 "${PROXY_URL}/health/liveliness" >/dev/null 2>&1; then
+  echo "Starting litellm proxy..." >&2
+  set -a
+  source "$HOME/.vibe/.env"
+  set +a
+  export LITELLM_MASTER_KEY
+  LITELLM_MASTER_KEY=$(cat "$MASTER_KEY_FILE")
+  nohup ~/.local/bin/litellm --config "$CONFIG_FILE" --port "$PROXY_PORT" >> "$LOG_FILE" 2>&1 < /dev/null &
+  for _ in $(seq 1 20); do
+    curl -s -m 1 "${PROXY_URL}/health/liveliness" >/dev/null 2>&1 && break
+    sleep 0.5
+  done
+fi
+
+export ANTHROPIC_BASE_URL="$PROXY_URL"
+export ANTHROPIC_AUTH_TOKEN
+ANTHROPIC_AUTH_TOKEN=$(cat "$MASTER_KEY_FILE")
+export ANTHROPIC_API_KEY="$ANTHROPIC_AUTH_TOKEN"
+export ANTHROPIC_MODEL="$MODEL_NAME"
+export ANTHROPIC_SMALL_FAST_MODEL="$MODEL_NAME"
+export API_TIMEOUT_MS=600000
+
+echo "claude-nelkinda: model=${ALIAS} (${MODEL_NAME}) via ${PROXY_URL}" >&2
+exec claude "$@"

@@ -1,0 +1,42 @@
+model_list:
+  - model_name: nelkinda-gemma4-12b
+    litellm_params:
+      model: openai/mac/gemma4:12b-mlx
+      api_base: https://ai.nelkinda.com/v1
+      api_key: os.environ/NELKINDA_AI_API_KEY
+
+  - model_name: nelkinda-gemma4-26b
+    litellm_params:
+      model: openai/mac/gemma4:26b-mlx
+      api_base: https://ai.nelkinda.com/v1
+      api_key: os.environ/NELKINDA_AI_API_KEY
+
+  - model_name: nelkinda-gemma4-31b
+    litellm_params:
+      model: openai/mac/gemma4:31b-mlx
+      api_base: https://ai.nelkinda.com/v1
+      api_key: os.environ/NELKINDA_AI_API_KEY
+
+  - model_name: nelkinda-qwen-27b
+    litellm_params:
+      model: openai/mac/qwen3.6:27b-mlx
+      api_base: https://ai.nelkinda.com/v1
+      api_key: os.environ/NELKINDA_AI_API_KEY
+
+  - model_name: nelkinda-qwen-27b-fp8
+    litellm_params:
+      model: openai/mac/qwen3.6:27b-mxfp8
+      api_base: https://ai.nelkinda.com/v1
+      api_key: os.environ/NELKINDA_AI_API_KEY
+
+  - model_name: nelkinda-qwen-35b
+    litellm_params:
+      model: openai/mac/qwen3.6:35b-mlx
+      api_base: https://ai.nelkinda.com/v1
+      api_key: os.environ/NELKINDA_AI_API_KEY
+
+litellm_settings:
+  drop_params: true
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY

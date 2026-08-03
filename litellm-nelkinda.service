@@ -1,0 +1,14 @@
+[Unit]
+Description=litellm proxy for nelkinda models (Anthropic-compatible, port 4000)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=%h/.config/litellm/proxy.env
+ExecStart=%h/.local/bin/litellm --config %h/.config/litellm/config.yaml --port 4000
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target
