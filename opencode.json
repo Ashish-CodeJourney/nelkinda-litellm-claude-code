@@ -1,0 +1,21 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "nelkinda": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Nelkinda",
+      "options": {
+        "baseURL": "https://ai.nelkinda.com/v1",
+        "apiKey": "{env:NELKINDA_AI_API_KEY}"
+      },
+      "models": {
+        "mac/gemma4:12b-mlx": { "name": "Gemma4 12B" },
+        "mac/gemma4:26b-mlx": { "name": "Gemma4 26B" },
+        "mac/gemma4:31b-mlx": { "name": "Gemma4 31B" },
+        "mac/qwen3.6:27b-mlx": { "name": "Qwen3.6 27B" },
+        "mac/qwen3.6:27b-mxfp8": { "name": "Qwen3.6 27B FP8" },
+        "mac/qwen3.6:35b-mlx": { "name": "Qwen3.6 35B" }
+      }
+    }
+  }
+}

@@ -1,7 +1,11 @@
-# nelkinda models in Claude Code
+# nelkinda models in Claude Code / OpenCode
 
 Run local models served on `ai.nelkinda.com` (an M5 Max, 40-GPU, 128GB Mac,
-speaking an OpenAI-compatible API) through **Claude Code**, Anthropic's CLI.
+speaking an OpenAI-compatible API) through **Claude Code** (Anthropic's CLI)
+and/or **OpenCode**.
+
+- **Claude Code**: needs a litellm proxy bridge — see [Claude Code setup](#claude-code-setup).
+- **OpenCode**: connects directly, no proxy needed — see [OpenCode setup](#opencode-setup).
 
 Claude Code only speaks Anthropic's `/v1/messages` API. nelkinda's models are
 served OpenAI-style. This repo bridges the two with a small
@@ -27,6 +31,8 @@ models instead — you choose per-invocation which backend you want.
 | `qwen-27b`     | `mac/qwen3.6:27b-mlx`  (default) |
 | `qwen-27b-fp8` | `mac/qwen3.6:27b-mxfp8`     |
 | `qwen-35b`     | `mac/qwen3.6:35b-mlx`       |
+
+## Claude Code setup
 
 ## How it fits together
 
@@ -129,6 +135,64 @@ prefixed `nelkinda-`).
 Your regular `claude` command is completely unaffected — it still talks to
 Anthropic normally. Only sessions launched via `claude-nelkinda` are redirected.
 
+## OpenCode setup
+
+OpenCode (https://opencode.ai) talks to OpenAI-compatible APIs directly, so
+nelkinda's models plug straight in as a custom provider — no litellm proxy
+needed.
+
+**1. Merge `opencode.json` into your OpenCode config.**
+
+Your config lives at `~/.config/opencode/opencode.json` (create it if it
+doesn't exist). Add the `provider` block from this repo's `opencode.json`
+into yours — if you already have other keys (`instructions`, `mcp`, etc.),
+keep them and just add `provider` alongside:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "nelkinda": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Nelkinda",
+      "options": {
+        "baseURL": "https://ai.nelkinda.com/v1",
+        "apiKey": "{env:NELKINDA_AI_API_KEY}"
+      },
+      "models": {
+        "mac/gemma4:12b-mlx": { "name": "Gemma4 12B" },
+        "mac/gemma4:26b-mlx": { "name": "Gemma4 26B" },
+        "mac/gemma4:31b-mlx": { "name": "Gemma4 31B" },
+        "mac/qwen3.6:27b-mlx": { "name": "Qwen3.6 27B" },
+        "mac/qwen3.6:27b-mxfp8": { "name": "Qwen3.6 27B FP8" },
+        "mac/qwen3.6:35b-mlx": { "name": "Qwen3.6 35B" }
+      }
+    }
+  }
+}
+```
+
+**2. Export your nelkinda key** wherever OpenCode runs (shell profile, or
+`~/.config/opencode/.env` if you use one):
+
+```bash
+export NELKINDA_AI_API_KEY=sk-your-nelkinda-key-here
+```
+
+**3. Verify and use:**
+
+```bash
+opencode models nelkinda        # lists all 6 registered models
+opencode run -m nelkinda/mac/qwen3.6:27b-mlx "say hi"
+```
+
+Or pick `nelkinda/<model>` from the model selector inside the OpenCode TUI.
+
+Note: these are reasoning models — they spend tokens on internal
+`reasoning_content` before the final answer, so give them enough `max_tokens`
+and don't be surprised if a first ("cold") response on the Mac takes over a
+minute.
+
 ## Files in this repo
 
 - **`config.yaml`** — litellm proxy config. Maps each nelkinda model to a
@@ -149,6 +213,8 @@ Anthropic normally. Only sessions launched via `claude-nelkinda` are redirected.
   real file (`.gitignore` blocks it).
 - **`.gitignore`** — excludes `proxy.env`, `master_key.txt`, and `*.log` so
   nobody accidentally commits secrets.
+- **`opencode.json`** — OpenCode custom provider block for nelkinda. Merge
+  its `provider.nelkinda` key into your own `~/.config/opencode/opencode.json`.
 
 ## Troubleshooting
 
